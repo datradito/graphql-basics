@@ -105,15 +105,28 @@ const typeDefs = `
     }
 
     type Mutation {
-        createUser(data: CreateUserInput): User!
-        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
-        createComment(text: String!, author: ID!, post: ID!): Comments!
+        createUser(data: CreateUserInput!): User!
+        createPost(data: CreatePostInput!): Post!
+        createComment(data: CreateCommentsInput!): Comments!
     }
 
     input CreateUserInput {
       name: String!, 
       email:String!,
       age: Int
+    }
+
+    input CreatePostInput {
+      title: String!, 
+      body: String!, 
+      published: Boolean!, 
+      author: ID!
+    }
+
+    input CreateCommentsInput {
+      text: String!, 
+      author: ID!, 
+      post: ID!
     }
 
     type User {
@@ -222,7 +235,7 @@ const resolvers = {
 
     createPost(parent, args, ctx, info) {
       //Compruebo que exista el usuario
-      const userExist = users.some(user => user.id === args.author);
+      const userExist = users.some(user => user.id === args.data.author);
 
       if (!userExist) {
         throw new Error("No existe el usuario.");
@@ -230,10 +243,7 @@ const resolvers = {
 
       const post = {
         id: uuidv4(),
-        title: args.title,
-        body: args.body,
-        published: args.published,
-        author: args.author
+        ...args.data
       };
       posts.push(post);
       return post;
@@ -241,10 +251,10 @@ const resolvers = {
 
     createComment(parent, args, ctx, info) {
       //Compruebo que exista el usuario
-      const userExist = users.some(user => user.id === args.author);
+      const userExist = users.some(user => user.id === args.data.author);
 
       const postExist = posts.some(
-        post => post.id === args.post && post.published
+        post => post.id === args.data.post && post.published
       );
 
       if (!userExist) {
@@ -257,14 +267,14 @@ const resolvers = {
 
       const comment = {
         id: uuidv4(),
-        text: args.text,
-        author: args.author,
-        post: args.post
+        ...args.data
       };
 
       comments.push(comment);
       return comment;
-    }
+    },
+
+    deleteUser(parent, args, ctx, info) {}
   },
 
   Post: {
